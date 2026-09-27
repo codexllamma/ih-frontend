@@ -3,12 +3,16 @@ import heroImg from './assets/hero.png'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import './App.css'
+import GoogleTranslate from './components/GoogleTranslate'
 
 function App() {
   const [count, setCount] = useState(0)
 
   return (
     <>
+      <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
+        <GoogleTranslate />
+      </div>
       <section id="center">
         <div className="hero">
           <img src={heroImg} className="base" width="170" height="179" alt="" />

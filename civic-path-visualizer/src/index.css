@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
   --text: #6b6375;
   --text-h: #08060d;
@@ -108,4 +110,46 @@ code {
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
+}
+
+/* --- Google Translate Overrides (from Mosip) --- */
+/* Kill the Google Translate Banner and Spinner permanently */
+.goog-te-banner-frame, 
+.goog-te-banner, 
+.skiptranslate, 
+#goog-gt-tt, 
+.goog-te-balloon-frame,
+.VIpgJd-ZVi9od-aZ2wEe-OiiCO,
+.VIpgJd-ZVi9od-aZ2wEe-OiiCO-ti6hGc {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    height: 0 !important;
+    width: 0 !important;
+}
+
+/* Prevent Google from pushing your content down by 40px */
+body {
+    top: 0 !important;
+    position: static !important;
+    margin-top: 0 !important;
+}
+
+/* Hide the highlight effect on translated text */
+.goog-text-highlight {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+.goog-te-banner-frame.skiptranslate {
+    display: none !important;
+}
+
+/* Hide the Google tooltip on hover */
+.goog-tooltip {
+    display: none !important;
+}
+.goog-tooltip:hover {
+    display: none !important;
 }
