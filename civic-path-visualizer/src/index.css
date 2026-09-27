@@ -13,66 +13,41 @@
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-body {
+html, body, #root {
+  width: 100vw;
+  height: 100vh;
   margin: 0;
+  padding: 0;
+  overflow: hidden;
+  /* Apply the vibrant mesh gradient to the absolute root */
+  background: linear-gradient(to bottom right, #eef2ff, #ffffff, #ecfeff);
+  color: #0f172a;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+.react-flow__viewport { transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.react-flow__node { transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.react-flow__edge-path { transition: d 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+.custom-node-wrapper { animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.exiting-node {
+  opacity: 0 !important;
+  transform: scale(0.9) translateY(10px) !important;
+  transition: all 0.3s ease-in !important;
+  pointer-events: none;
+}
+
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.9) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+::-webkit-scrollbar { width: 0px; background: transparent; }
+
+/* Force isolated GPU composite layers to prevent backdrop-blur lag */
+.transform-gpu {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform;
 }
 
 h1 {
@@ -152,4 +127,7 @@ body {
 }
 .goog-tooltip:hover {
     display: none !important;
+}
+canvas {
+  touch-action: none;
 }

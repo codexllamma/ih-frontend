@@ -1,0 +1,68 @@
+{
+  "task": "Driving License Application in New Delhi",
+  "initialNodes": ["step_1", "step_2", "step_3", "step_4"],
+  "initialEdges": [
+    {"source": "step_1", "target": "step_2"},
+    {"source": "step_2", "target": "step_3"},
+    {"source": "step_3", "target": "step_4"}
+  ],
+  "nodes": {
+    "step_1": {
+      "id": "step_1",
+      "type": "process",
+      "title": "Register on Parivahan",
+      "chatText": "Go to the Parivahan website and click on 'New User' to register. You will need a valid Aadhaar card and a mobile number.",
+      "actionLink": "https://parivahan.gov.in",
+      "prerequisites": ["aadhaar_doc", "mobile_doc"]
+    },
+    "aadhaar_doc": {
+      "id": "aadhaar_doc",
+      "type": "document",
+      "title": "Aadhaar Card",
+      "chatText": "A valid Aadhaar card is required for identity verification.",
+      "prerequisites": []
+    },
+    "mobile_doc": {
+      "id": "mobile_doc",
+      "type": "document",
+      "title": "Valid Mobile Number",
+      "chatText": "Required for OTP verification on the Parivahan portal.",
+      "prerequisites": []
+    },
+    "step_2": {
+      "id": "step_2",
+      "type": "process",
+      "title": "Fill Online Application",
+      "chatText": "Log in and click 'Apply for Driving License'. Fill the form and upload the required documents.",
+      "prerequisites": ["address_proof", "photo_doc"]
+    },
+    "address_proof": {
+      "id": "address_proof",
+      "type": "document",
+      "title": "Address Proof",
+      "chatText": "Acceptable documents include utility bills, lease agreements, etc.",
+      "prerequisites": []
+    },
+    "photo_doc": {
+      "id": "photo_doc",
+      "type": "document",
+      "title": "Passport Photograph",
+      "chatText": "Recent passport-sized photograph for the license.",
+      "prerequisites": []
+    },
+    "step_3": {
+      "id": "step_3",
+      "type": "process",
+      "title": "Pay Fees",
+      "chatText": "Pay the application fees online (approx. Rs. 200-300).",
+      "prerequisites": []
+    },
+    "step_4": {
+      "id": "step_4",
+      "type": "process",
+      "title": "Visit RTO Office",
+      "chatText": "Print the application form and visit the New Delhi RTO to submit it along with physical copies.",
+      "prerequisites": []
+    }
+  }
+}
