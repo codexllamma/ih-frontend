@@ -157,23 +157,24 @@ const GoogleTranslate = () => {
           padding: 10px 16px;
           border-radius: 9999px;
           transition: all 0.3s ease;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(0, 0, 0, 0.1);
+          background: rgba(255, 255, 255, 0.9);
           backdrop-filter: blur(8px);
           -webkit-backdrop-filter: blur(8px);
-          color: #e5e7eb;
+          color: #475569;
           font-family: system-ui, sans-serif;
           cursor: pointer;
-          box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
         .custom-translate-btn:hover {
-          background: rgba(255, 255, 255, 0.1);
-          border-color: rgba(255, 255, 255, 0.2);
+          background: #ffffff;
+          border-color: rgba(0, 0, 0, 0.2);
+          color: #1e293b;
         }
         .custom-translate-btn.open {
-          background: rgba(99, 102, 241, 0.15); /* Indigo tint */
-          border-color: rgba(99, 102, 241, 0.3);
-          color: #818cf8;
+          background: #eef2ff; /* Indigo tint */
+          border-color: #c7d2fe;
+          color: #4f46e5;
         }
         
         .icon-main { width: 20px; height: 20px; }

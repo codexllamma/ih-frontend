@@ -12,6 +12,7 @@ import { X } from 'lucide-react';
 
 function App() {
   const { nodes, appState, setAppState } = useStore();
+  const [count, setCount] = useState(0);
 
   return (
     <>
@@ -99,6 +100,7 @@ function App() {
       <ChatSidebar/>
 
     </div>
+    </>
   );
 }
 
