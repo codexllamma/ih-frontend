@@ -43,7 +43,7 @@ export const useStore = create<FlowState>((set, get) => ({
       ]
     }));
     
-    const ws = new WebSocket('ws://localhost:8080');
+    const ws = new WebSocket('wss://factsheet-tradition-giblet.ngrok-free.dev/ws/generate-procedure');
 
     ws.onopen = () => ws.send(JSON.stringify({ query: userQuery, attachToNodeId }));
 
