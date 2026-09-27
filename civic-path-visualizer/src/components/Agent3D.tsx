@@ -16,7 +16,7 @@ const RobotModel = () => {
     scene.traverse((node: any) => {
       if (node.isMesh && node.material?.name === 'Material.003') {
         mat = node.material;
-        mat.emissiveIntensity = 2.0; 
+        if (mat) mat.emissiveIntensity = 2.0; 
       }
     });
     return mat;
@@ -181,7 +181,6 @@ const RobotModel = () => {
     });
 
     // 9. SMOOTH SCALE & POSITION ANIMATION
-    const targetScale = !isProcessing ? 1.0 : 1.3;
     const targetY = -0.5;
     const targetZ = !isProcessing ? 0.0 : -1.0;
     const wobble = isProcessing ? Math.sin(time * 15) * 0.05 : 0;

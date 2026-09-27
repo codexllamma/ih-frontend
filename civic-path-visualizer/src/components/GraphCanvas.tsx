@@ -10,20 +10,59 @@ const FlowCanvasInner = () => {
   const { fitView } = useReactFlow();
 
   const onNodeClick = (_: any, node: any) => {
-    setSelectedNode(node.id);
-    if (node.data.type === 'process') toggleNode(node.id);
+    if (selectedNodeId === node.id) {
+      // If already selected, collapse it
+      setSelectedNode(null);
+    } else {
+      // Otherwise select it
+      setSelectedNode(node.id);
+      // Auto-expand its prerequisites in the graph if it has any
+      if (node.data?.type === 'process') toggleNode(node.id);
+    }
+  };
+
+  const onPaneClick = () => {
+    setSelectedNode(null);
   };
 
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (selectedNodeId) {
-        fitView({ nodes: [{ id: selectedNodeId }], padding: 2, duration: 1000, maxZoom: 1.1 });
+    if (nodes.length === 0) return;
+
+    // A. If a specific node is selected, zoom directly to it
+    if (selectedNodeId) {
+      if (selectedNodeId === 'node_prereqs_main') {
+        // Zoom OUT to reveal the entire radial flower
+        fitView({ 
+          nodes: [{ id: selectedNodeId }], 
+          duration: 1000, 
+          padding: 3.5,  // Huge padding to frame the children
+          maxZoom: 0.6   // Keep it zoomed out
+        });
       } else {
-        fitView({ padding: 0.3, duration: 800 });
+        fitView({ 
+          nodes: [{ id: selectedNodeId }], 
+          duration: 800, 
+          padding: 0.5,  
+          maxZoom: 1.2   
+        });
       }
-    }, 50);
-    return () => clearTimeout(timeoutId);
-  }, [selectedNodeId, nodes.length, fitView]);
+    } 
+    // B. If nothing is selected, focus on the "Prerequisites" root node
+    else {
+      const rootNode = nodes.find(n => n.id === 'node_prereqs_main');
+      if (rootNode) {
+        fitView({ 
+          nodes: [{ id: rootNode.id }], 
+          duration: 1000, 
+          padding: 0.3,
+          maxZoom: 1 
+        });
+      } else {
+        // Fallback: Just fit the first node in the array
+        fitView({ nodes: [nodes[0]], duration: 800, padding: 0.5, maxZoom: 1 });
+      }
+    }
+  }, [nodes, selectedNodeId, fitView]);
 
   return (
     <div style={{ width: '100%', height: '100%' }}>
@@ -32,8 +71,7 @@ const FlowCanvasInner = () => {
         edges={edges}
         nodeTypes={nodeTypes}
         onNodeClick={onNodeClick}
-        fitView
-        fitViewOptions={{ padding: 0.3, duration: 800 }}
+        onPaneClick={onPaneClick}
         minZoom={0.1}
         maxZoom={1.5}
         className="touch-none"

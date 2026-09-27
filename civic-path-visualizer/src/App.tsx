@@ -22,6 +22,12 @@ function App() {
         <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-blue-400/20 blur-[120px]"></div>
         <div className="absolute top-[40%] right-[20%] w-[40%] h-[60%] rounded-full bg-indigo-400/20 blur-[120px]"></div>
       </div>
+      
+      {appState === 'error' && (
+        <div className="absolute top-0 left-0 w-full z-[100] bg-red-600/90 text-white p-4 text-center font-mono font-bold shadow-2xl backdrop-blur-sm animate-pulse">
+           CRITICAL ERROR: Check browser console or Network logs. Graph Payload crashed the state machine.
+        </div>
+      )}
 
       {/* 🔥 THE MASTER CONTAINER: Uses your exact Tailwind classes to slide everything together */}
       <div className={`absolute inset-0 z-10 transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
@@ -29,12 +35,12 @@ function App() {
       }`}>
         
         <div 
-          className="w-full h-full flex flex-col items-center justify-center pointer-events-auto cursor-pointer"
+          className={`w-full h-full flex flex-col items-center justify-center ${appState === 'idle' ? 'pointer-events-auto cursor-pointer' : 'pointer-events-none'}`}
           onClick={() => appState === 'idle' && setAppState('active')}
         >
           
           {/* THE ROBOT CANVAS */}
-          <div className="relative w-full h-[60vh] flex items-center justify-center">
+          <div className="relative w-full h-[60vh] flex items-center justify-center pointer-events-auto">
              <Agent3D/>
           </div>
           
@@ -48,21 +54,23 @@ function App() {
         </div>
       </div>
 
-      {/* GRAPH CANVAS MODAL */}
-      <div className={`absolute top-6 left-6 bottom-6 right-[450px] z-20 transition-all duration-1000 ${
-        nodes.length > 0 ? 'opacity-100 translate-x-0 scale-100' : 'opacity-0 -translate-x-12 scale-95 pointer-events-none'
+      {/* GRAPH CANVAS FULL SCREEN */}
+      <div className={`absolute inset-0 w-screen h-screen z-20 transition-all duration-1000 ${
+        nodes.length > 0 ? 'opacity-100 translate-x-0 scale-100 pointer-events-auto' : 'opacity-0 -translate-x-12 scale-95 pointer-events-none'
       }`}>
-        <div className="w-full h-full bg-white/5 backdrop-blur-lg border border-white/50 rounded-3xl shadow-2xl overflow-hidden p-2 flex flex-col relative">
-          <div className="absolute top-4 left-6 z-20 flex items-center gap-2">
+        {/* We use pointer-events-auto inside so the graph is clickable, but empty space is click-through */}
+        <div className="w-full h-full relative">
+          <div className="absolute top-6 left-6 z-50 flex items-center gap-2">
              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-             <span className="text-xs font-bold text-slate-600 uppercase tracking-widest bg-white/50 px-2 py-1 rounded-md backdrop-blur-md">Active Civic Matrix</span>
+             <span className="text-xs font-bold text-slate-600 uppercase tracking-widest bg-white/50 px-2 py-1 rounded-md backdrop-blur-md shadow-sm">Active Civic Matrix</span>
           </div>
           <button 
             onClick={() => useStore.setState({ nodes: [], edges: [], graphDatabase: null, appState: 'idle', chatHistory: [] })} 
-            className="absolute top-4 right-6 z-20 p-2 bg-white/50 hover:bg-white/80 rounded-full backdrop-blur-md text-slate-500 hover:text-slate-800 transition-colors shadow-sm"
+            className="absolute top-6 right-[420px] z-50 p-2 bg-white/50 hover:bg-white/80 rounded-full backdrop-blur-md text-slate-500 hover:text-slate-800 transition-colors shadow-sm"
           >
             <X size={18} strokeWidth={2.5}/>
           </button>
+          
           <GraphCanvas/>
         </div>
       </div>

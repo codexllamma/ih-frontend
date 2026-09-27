@@ -182,3 +182,20 @@
     border-right-color: var(--border);
   }
 }
+
+.custom-node-wrapper { 
+  animation: projectFromBot 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
+}
+
+@keyframes projectFromBot {
+  0% { 
+    opacity: 0; 
+    transform: scale(0.5) translateX(-100px); 
+    filter: blur(8px) brightness(2);
+  }
+  100% { 
+    opacity: 1; 
+    transform: scale(1) translateX(0); 
+    filter: blur(0px) brightness(1);
+  }
+}
