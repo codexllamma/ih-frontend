@@ -1,3 +1,9 @@
+import { useState } from 'react'
+import heroImg from './assets/hero.png'
+import reactLogo from './assets/react.svg'
+import viteLogo from './assets/vite.svg'
+import './App.css'
+import GoogleTranslate from './components/GoogleTranslate'
 import { GraphCanvas } from './components/GraphCanvas';
 import { ChatSidebar } from './components/ChatSidebar';
 import { Agent3D } from './components/Agent3D';
@@ -8,6 +14,30 @@ function App() {
   const { nodes, appState, setAppState } = useStore();
 
   return (
+    <>
+      <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
+        <GoogleTranslate />
+      </div>
+      <section id="center">
+        <div className="hero">
+          <img src={heroImg} className="base" width="170" height="179" alt="" />
+          <img src={reactLogo} className="framework" alt="React logo" />
+          <img src={viteLogo} className="vite" alt="Vite logo" />
+        </div>
+        <div>
+          <h1>Get started</h1>
+          <p>
+            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
+          </p>
+        </div>
+        <button
+          type="button"
+          className="counter"
+          onClick={() => setCount((count) => count + 1)}
+        >
+          Count is {count}
+        </button>
+      </section>
     <div className="relative w-screen h-screen overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
       
       {/* Decorative Background */}

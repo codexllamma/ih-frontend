@@ -1,5 +1,18 @@
 @import "tailwindcss";
 
+:root {
+  --text: #6b6375;
+  --text-h: #08060d;
+  --bg: #fff;
+  --border: #e5e4e7;
+  --code-bg: #f4f3ec;
+  --accent: #aa3bff;
+  --accent-bg: rgba(170, 59, 255, 0.1);
+  --accent-border: rgba(170, 59, 255, 0.5);
+  --social-bg: rgba(244, 243, 236, 0.5);
+  --shadow:
+    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+
 html, body, #root {
   width: 100vw;
   height: 100vh;
@@ -37,6 +50,84 @@ html, body, #root {
   will-change: transform;
 }
 
+h1 {
+  font-size: 56px;
+  letter-spacing: -1.68px;
+  margin: 32px 0;
+  @media (max-width: 1024px) {
+    font-size: 36px;
+    margin: 20px 0;
+  }
+}
+h2 {
+  font-size: 24px;
+  line-height: 118%;
+  letter-spacing: -0.24px;
+  margin: 0 0 8px;
+  @media (max-width: 1024px) {
+    font-size: 20px;
+  }
+}
+p {
+  margin: 0;
+}
+
+code,
+.counter {
+  font-family: var(--mono);
+  display: inline-flex;
+  border-radius: 4px;
+  color: var(--text-h);
+}
+
+code {
+  font-size: 15px;
+  line-height: 135%;
+  padding: 4px 8px;
+  background: var(--code-bg);
+}
+
+/* --- Google Translate Overrides (from Mosip) --- */
+/* Kill the Google Translate Banner and Spinner permanently */
+.goog-te-banner-frame, 
+.goog-te-banner, 
+.skiptranslate, 
+#goog-gt-tt, 
+.goog-te-balloon-frame,
+.VIpgJd-ZVi9od-aZ2wEe-OiiCO,
+.VIpgJd-ZVi9od-aZ2wEe-OiiCO-ti6hGc {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    height: 0 !important;
+    width: 0 !important;
+}
+
+/* Prevent Google from pushing your content down by 40px */
+body {
+    top: 0 !important;
+    position: static !important;
+    margin-top: 0 !important;
+}
+
+/* Hide the highlight effect on translated text */
+.goog-text-highlight {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+.goog-te-banner-frame.skiptranslate {
+    display: none !important;
+}
+
+/* Hide the Google tooltip on hover */
+.goog-tooltip {
+    display: none !important;
+}
+.goog-tooltip:hover {
+    display: none !important;
+}
 canvas {
   touch-action: none;
 }
