@@ -12,17 +12,19 @@ export type ApiPayload = {
 
 type ChatMessage = { id: string; role: 'user' | 'agent' | 'status'; text: string; };
 
+export type AppState = 'idle' | 'active' | 'loading' | 'success' | 'error';
+
 interface FlowState {
   nodes: Node[]; edges: Edge[]; selectedNodeId: string | null;
   graphDatabase: ApiPayload | null;
   chatHistory: ChatMessage[];
   isLoading: boolean;
-  appState: 'idle' | 'active';
+  appState: AppState;
   
   fetchGraphData: (userQuery: string, attachToNodeId?: string) => void;
   setSelectedNode: (id: string | null) => void;
   toggleNode: (parentId: string) => void; 
-  setAppState: (state: 'idle' | 'active') => void;
+  setAppState: (state: AppState) => void;
 }
 
 export const useStore = create<FlowState>((set, get) => ({
@@ -30,8 +32,10 @@ export const useStore = create<FlowState>((set, get) => ({
 
   fetchGraphData: (userQuery: string, attachToNodeId?: string) => {
     const newMsgId = Date.now().toString();
+    
     set((state) => ({
       isLoading: true,
+      appState: 'loading',
       chatHistory: [
         ...state.chatHistory, 
         { id: `user-${newMsgId}`, role: 'user', text: userQuery },
@@ -65,7 +69,6 @@ export const useStore = create<FlowState>((set, get) => ({
             id: `e-${e.source}-${e.target}`, source: e.source, target: e.target, animated: true, style: { stroke: '#3b82f6', strokeWidth: 2 } 
           } as Edge));
 
-          // THE MERGE LOGIC
           if (parentId && currentDb) {
             mergedDb = { ...currentDb, nodes: { ...currentDb.nodes, ...liveData.nodes } };
             
@@ -87,21 +90,39 @@ export const useStore = create<FlowState>((set, get) => ({
             rawEdges = [...get().edges, ...newExtensionEdges, ...rawEdges];
           }
 
-          const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(rawNodes, rawEdges, 'TB'); // Note the 'TB' added here
+          const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(rawNodes, rawEdges, 'TB'); 
           
           set((state) => ({ 
             nodes: layoutedNodes, 
             edges: layoutedEdges, 
             graphDatabase: mergedDb, 
             isLoading: false,
+            appState: 'success', 
             chatHistory: state.chatHistory
               .filter(msg => msg.id !== `status-${newMsgId}`)
               .concat({ id: `agent-${newMsgId}`, role: 'agent', text: liveData.narrative })
           }));
           
           ws.close();
+
+          // 🔥 THE FIX: Fall back to 'active' so the sidebar STAYS OPEN and the robot STAYS ON THE LEFT
+          setTimeout(() => {
+            set({ appState: 'active' });
+          }, 3000);
         }
-      } catch (error) { console.error(error); }
+      } catch (error) { 
+        console.error(error); 
+        set({ isLoading: false, appState: 'error' });
+        // 🔥 THE FIX: Fall back to 'active' here too
+        setTimeout(() => set({ appState: 'active' }), 3000);
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket connection error:', error);
+      set({ isLoading: false, appState: 'error' });
+      // 🔥 THE FIX: Fall back to 'active' here too
+      setTimeout(() => set({ appState: 'active' }), 3000);
     };
   },
 
@@ -111,26 +132,22 @@ export const useStore = create<FlowState>((set, get) => ({
   toggleNode: (parentId) => {
     const { nodes, edges, graphDatabase } = get();
     
-    // Safety check: Don't run if data hasn't loaded yet
     if (!graphDatabase) return;
     
     const parentData = graphDatabase.nodes[parentId];
     if (!parentData || !parentData.prerequisites.length) return;
 
-    // Check if prerequisite edges are visible
     const isExpanded = edges.some(
       (edge) => edge.source === parentId && parentData.prerequisites.includes(edge.target)
     );
 
     if (isExpanded) {
-      // --- COLLAPSE LOGIC ---
       const nodesToRemove = new Set<string>();
       const queue = [parentId];
 
       while (queue.length > 0) {
         const currentId = queue.shift()!;
         
-        // Target children NOT part of the initial timeline
         const children = edges
           .filter(e => e.source === currentId && !graphDatabase.initialNodes.includes(e.target))
           .map(e => e.target);
@@ -154,7 +171,6 @@ export const useStore = create<FlowState>((set, get) => ({
       }, 300);
 
     } else {
-      // --- EXPAND LOGIC ---
       const existingNodeIds = new Set(nodes.map(n => n.id));
       const newPrereqs = parentData.prerequisites.filter(reqId => !existingNodeIds.has(reqId));
       if (newPrereqs.length === 0) return;

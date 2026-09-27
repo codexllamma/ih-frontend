@@ -41,11 +41,12 @@ export const ChatSidebar = () => {
   };
 
   return (
-    <div className={`absolute top-6 right-6 bottom-6 w-[400px] bg-slate-300/20 backdrop-blur-md border border-white/50 shadow-2xl shadow-indigo-900/10 rounded-3xl flex flex-col z-30 transition-all duration-700 ease-out ${
-      appState === 'active' ? 'translate-x-0 opacity-100' : 'translate-x-[120%] opacity-0'
+    // 🔥 PREMIUM FIX: Matched the physics to duration-1000 and cubic-bezier(0.16,1,0.3,1), added deep shadow
+    <div className={`absolute top-6 right-6 bottom-6 w-[400px] bg-white/70 backdrop-blur-2xl border-l border-white/60 shadow-[-20px_0_40px_rgba(0,0,0,0.05)] rounded-3xl flex flex-col z-30 transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+      appState !== 'idle' ? 'translate-x-0 opacity-100' : 'translate-x-[120%] opacity-0'
     }`}>
       
-      <div className="p-6 shrink-0 flex items-center gap-3 border-b border-white/30">
+      <div className="p-6 shrink-0 flex items-center gap-3 border-b border-white/40">
         <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-sm">
           <div className="w-3 h-3 bg-white rounded-full"></div>
         </div>
@@ -82,9 +83,9 @@ export const ChatSidebar = () => {
       </div>
 
       {selectedNode && (
-        <div className="p-5 bg-slate-300/20 backdrop-blur-md border-t border-white/40 shadow-[0_-10px_30px_rgba(0,0,0,0.02)] shrink-0 animate-in slide-in-from-bottom-4">
+        <div className="p-5 bg-white/50 backdrop-blur-xl border-t border-white/60 shadow-[0_-10px_30px_rgba(0,0,0,0.03)] shrink-0 animate-in slide-in-from-bottom-4">
           <div className="flex justify-between items-start mb-3">
-            <div className="inline-block px-2.5 py-1 bg-white/50 text-slate-600 text-[10px] font-bold uppercase tracking-widest rounded-md border border-white/60">
+            <div className="inline-block px-2.5 py-1 bg-white/80 text-slate-600 text-[10px] font-bold uppercase tracking-widest rounded-md border border-white/60">
               {selectedNode.type}
             </div>
             <button onClick={() => useStore.getState().setSelectedNode(null)} className="text-slate-400 hover:text-slate-800 text-xs font-bold transition-colors">&times; CLOSE</button>
@@ -101,7 +102,7 @@ export const ChatSidebar = () => {
 
       <div className="p-5 pt-2 shrink-0 bg-transparent">
         <form onSubmit={handleSend} className="relative group">
-          <input type="text" value={input} onChange={(e) => setInput(e.target.value)} disabled={isLoading} placeholder="Ask the AI..." className="w-full bg-slate-300/20 backdrop-blur-md text-slate-800 font-medium border border-white/50 shadow-sm rounded-2xl py-3.5 pl-5 pr-14 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all disabled:opacity-50" />
+          <input type="text" value={input} onChange={(e) => setInput(e.target.value)} disabled={isLoading} placeholder="Ask the AI..." className="w-full bg-white/50 backdrop-blur-md text-slate-800 font-medium border border-slate-300/60 shadow-sm rounded-2xl py-3.5 pl-5 pr-14 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all disabled:opacity-50" />
           <button type="submit" disabled={isLoading || !input.trim()} className="absolute right-2 top-2 bottom-2 aspect-square flex items-center justify-center bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-all shadow-sm">
             <Send size={16}/>
           </button>
