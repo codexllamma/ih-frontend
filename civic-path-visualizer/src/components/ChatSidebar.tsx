@@ -1,6 +1,7 @@
-import { Info, Send, ArrowRight, ChevronRight } from 'lucide-react';
+import { Info, Send, ArrowRight, ChevronRight, Mic, MicOff } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import React, { useState, useRef, useEffect } from 'react';
+import { useVoice } from '../hooks/useVoice';
 
 const InteractiveNarrative = ({ text }: { text: string }) => {
   const { setSelectedNode, toggleNode } = useStore();
@@ -26,10 +27,19 @@ const InteractiveNarrative = ({ text }: { text: string }) => {
 };
 
 export const ChatSidebar = () => {
-  const { selectedNodeId, graphDatabase, chatHistory, isLoading, fetchGraphData, appState } = useStore();
+  const { selectedNodeId, graphDatabase, chatHistory, isLoading, fetchGraphData, appState, isListening } = useStore();
+  const { startRecording, stopRecording, isRecording } = useVoice();
   const [input, setInput] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
   const selectedNode = selectedNodeId && graphDatabase ? graphDatabase.nodes[selectedNodeId] : null;
+
+  const handleMicToggle = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatHistory]);
 
@@ -102,8 +112,32 @@ export const ChatSidebar = () => {
 
       <div className="p-5 pt-2 shrink-0 bg-transparent">
         <form onSubmit={handleSend} className="relative group">
-          <input type="text" value={input} onChange={(e) => setInput(e.target.value)} disabled={isLoading} placeholder="Ask the AI..." className="w-full bg-white/50 backdrop-blur-md text-slate-800 font-medium border border-slate-300/60 shadow-sm rounded-2xl py-3.5 pl-5 pr-14 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all disabled:opacity-50" />
-          <button type="submit" disabled={isLoading || !input.trim()} className="absolute right-2 top-2 bottom-2 aspect-square flex items-center justify-center bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-all shadow-sm">
+          <input 
+            type="text" 
+            value={input} 
+            onChange={(e) => setInput(e.target.value)} 
+            disabled={isLoading || isRecording || isListening} 
+            placeholder={isRecording ? "Listening..." : "Ask the AI..."} 
+            className="w-full bg-white/50 backdrop-blur-md text-slate-800 font-medium border border-slate-300/60 shadow-sm rounded-2xl py-3.5 pl-5 pr-24 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all disabled:opacity-50" 
+          />
+          
+          <button 
+            type="button" 
+            onClick={handleMicToggle}
+            className={`absolute right-12 top-2 bottom-2 aspect-square flex items-center justify-center rounded-xl transition-all shadow-sm ${
+              isRecording 
+                ? 'bg-red-500 text-white animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)]' 
+                : 'bg-white/80 text-slate-500 hover:bg-slate-100'
+            }`}
+          >
+            {isRecording ? <Mic size={16}/> : <MicOff size={16}/>}
+          </button>
+
+          <button 
+            type="submit" 
+            disabled={isLoading || !input.trim() || isRecording} 
+            className="absolute right-2 top-2 bottom-2 aspect-square flex items-center justify-center bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-all shadow-sm"
+          >
             <Send size={16}/>
           </button>
         </form>

@@ -8,7 +8,7 @@ const RobotModel = () => {
   const group = useRef<THREE.Group>(null);
   const radarRef = useRef<THREE.Group>(null);
   const { scene } = useGLTF('/robot.glb'); 
-  const { isLoading, appState } = useStore();
+  const { isLoading, appState, isListening, isSpeaking, nodes, selectedNodeId } = useStore();
 
   // 1. EXTRACT THE GLOWING MATERIAL
   const glowMaterial = useMemo(() => {
@@ -41,6 +41,7 @@ const RobotModel = () => {
       else if (node.name === 'Cube001') {
         parts.arms.push(node);
         node.userData.baseZ = node.rotation.z || 0; 
+        node.userData.baseX = node.rotation.x || 0;
       }
       else if (node.name.includes('NurbsPath') || node.name.includes('Cube008')) {
         faceParts.push(node);
@@ -85,6 +86,8 @@ const RobotModel = () => {
   const thinkingColor = useMemo(() => new THREE.Color("#ff8800"), []); 
   const successColor = useMemo(() => new THREE.Color("#39ff14"), []); 
   const errorColor = useMemo(() => new THREE.Color("#ff0000"), []); 
+  const listeningColor = useMemo(() => new THREE.Color("#ec4899"), []); // Pink
+  const speakingColor = useMemo(() => new THREE.Color("#eab308"), []); // Yellow
 
   useFrame((state) => {
     if (!group.current) return;
@@ -97,7 +100,11 @@ const RobotModel = () => {
       const mat = glowMaterial as THREE.MeshStandardMaterial;
       let targetColor = idleColor;
       
-      if (isProcessing) {
+      if (isListening) {
+        targetColor = listeningColor;
+      } else if (isSpeaking) {
+        targetColor = speakingColor;
+      } else if (isProcessing) {
         targetColor = thinkingColor;
       } else if (appState === 'success') {
         targetColor = successColor;
@@ -123,9 +130,28 @@ const RobotModel = () => {
       introSpin = Math.PI * 2;
     }
     
-    // 5. PROCEDURAL MOUSE TRACKING
-    const targetLookX = time > introDuration ? (state.pointer.x * Math.PI) / 4 : 0; 
-    const targetLookY = time > introDuration ? (state.pointer.y * Math.PI) / 4 : 0; 
+    // 5. PROCEDURAL MOUSE OR NODE TRACKING
+    let targetLookX = 0;
+    let targetLookY = 0;
+
+    if (appState === 'idle') {
+      // Classic global mouse tracking on the landing page
+      targetLookX = time > introDuration ? (state.pointer.x * Math.PI) / 4 : 0; 
+      targetLookY = time > introDuration ? (state.pointer.y * Math.PI) / 4 : 0; 
+    } else if (selectedNodeId) {
+      // When graph is open, track the virtual coordinate of the selected node!
+      const activeNode = nodes.find(n => n.id === selectedNodeId);
+      if (activeNode) {
+        // Map the virtual React Flow coordinates (0 to ~3000) to a gentle body turn
+        targetLookX = (activeNode.position.x / 1200) * 0.4; 
+        targetLookY = -(activeNode.position.y / 600) * 0.3; 
+        
+        // Clamp to prevent the robot from turning fully around
+        targetLookX = Math.max(-0.6, Math.min(0.6, targetLookX));
+        targetLookY = Math.max(-0.4, Math.min(0.4, targetLookY));
+      }
+    }
+
     const baseRotationY = 0.5;
 
     let targetRotY = baseRotationY + targetLookX + introSpin;
@@ -141,18 +167,23 @@ const RobotModel = () => {
     
     // 6. ANIMATE THE HEAD 
     if (head) {
-      let targetHeadX = head.userData.baseX + Math.sin(time * 2) * 0.05; 
-      let targetHeadY = 0;
+      // Base rotations based on Voice State
+      let baseRotationX = 0;
+      let baseRotationY = 0;
 
-      if (isProcessing) {
-        targetHeadX = head.userData.baseX - 0.05; 
-        targetHeadY = Math.sin(time * 1.5) * 0.05; 
+      if (isSpeaking) {
+        baseRotationX = Math.sin(time * 6) * 0.15; // Nodding
+        baseRotationY = Math.sin(time * 3) * 0.05; // Subtle side to side
+      } else if (isListening) {
+        baseRotationX = 0.2; // Leaning in
+      } else if (isProcessing) {
+        baseRotationX = -0.05; 
+        baseRotationY = Math.sin(time * 1.5) * 0.05; 
       }
       
-      if (!isNaN(targetHeadX)) {
-        head.rotation.x = THREE.MathUtils.lerp(head.rotation.x, targetHeadX, 0.1);
-        head.rotation.y = THREE.MathUtils.lerp(head.rotation.y, targetHeadY, 0.1);
-      }
+      // Keep the head simple and strictly tied to Voice UI states
+      head.rotation.y = THREE.MathUtils.lerp(head.rotation.y, baseRotationY, 0.1);
+      head.rotation.x = THREE.MathUtils.lerp(head.rotation.x, head.userData.baseX + baseRotationX, 0.1);
     }
 
     // 7. ANIMATE THE HOLOGRAPHIC RADAR
@@ -174,7 +205,8 @@ const RobotModel = () => {
     // 8. SUBTLE ARM IDLE 
     arms.forEach((arm) => {
       const armWaveAdd = Math.sin(time * 2.5) * 0.05; 
-      const targetZ = arm.userData.baseZ + armWaveAdd;
+      let targetZ = arm.userData.baseZ + armWaveAdd;
+
       if (!isNaN(targetZ)) {
         arm.rotation.z = THREE.MathUtils.lerp(arm.rotation.z, targetZ, 0.1); 
       }
@@ -182,7 +214,11 @@ const RobotModel = () => {
 
     // 9. SMOOTH SCALE & POSITION ANIMATION
     const targetY = -0.5;
-    const targetZ = !isProcessing ? 0.0 : -1.0;
+    let targetZ = !isProcessing ? 0.0 : -1.0;
+    if (isListening) {
+      targetZ = 1.0; // Move closer to camera
+    }
+    
     const wobble = isProcessing ? Math.sin(time * 15) * 0.05 : 0;
     
     group.current.position.lerp(new THREE.Vector3(0.0, targetY + wobble + introBounce, targetZ), 0.15);
@@ -218,6 +254,7 @@ export const Agent3D = () => {
       <Canvas 
         dpr={[0.5, 1.3]} 
         camera={{ position: [0, 0, 6], fov: 45 }} 
+        eventSource={document.getElementById('root') || document.body}
         gl={{
           powerPreference: 'high-performance', 
           antialias: true, 

@@ -30,6 +30,12 @@ interface FlowState {
   markAllPrerequisitesCompleted: () => void;
   completeNode: (nodeId: string) => void;
   completeProcess: (nodeId: string) => void;
+  isListening: boolean;
+  isSpeaking: boolean;
+  setIsListening: (val: boolean) => void;
+  setIsSpeaking: (val: boolean) => void;
+  addVoiceMessages: (userText: string, agentText: string) => void;
+  syncTaskState: (newState: Record<string, NodeStatus>) => void;
 }
 
 const updateCascadeLogic = (get: any, set: any) => {
@@ -69,6 +75,9 @@ const updateCascadeLogic = (get: any, set: any) => {
 
 export const useStore = create<FlowState>((set, get) => ({
   nodes: [], edges: [], selectedNodeId: null, graphDatabase: null, chatHistory: [], isLoading: false, appState: 'idle', nodeStatuses: {},
+  isListening: false, isSpeaking: false,
+  setIsListening: (val) => set({ isListening: val }),
+  setIsSpeaking: (val) => set({ isSpeaking: val }),
 
   fetchGraphData: (userQuery: string, attachToNodeId?: string | null) => {
     const newMsgId = Date.now().toString();
@@ -263,6 +272,24 @@ export const useStore = create<FlowState>((set, get) => ({
       ...(nextStepId ? { selectedNodeId: nextStepId } : {}) 
     });
     
+    updateCascadeLogic(get, set);
+  },
+
+  addVoiceMessages: (userText: string, agentText: string) => {
+    const newMsgId = Date.now().toString();
+    set((state) => ({
+      chatHistory: [
+        ...state.chatHistory,
+        { id: `user-voice-${newMsgId}`, role: 'user', text: userText },
+        { id: `agent-voice-${newMsgId}`, role: 'agent', text: agentText }
+      ]
+    }));
+  },
+
+  syncTaskState: (newState: Record<string, NodeStatus>) => {
+    set((state) => ({ 
+      nodeStatuses: { ...state.nodeStatuses, ...newState } 
+    }));
     updateCascadeLogic(get, set);
   },
 
