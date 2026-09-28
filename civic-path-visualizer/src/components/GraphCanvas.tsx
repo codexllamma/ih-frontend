@@ -3,6 +3,7 @@ import { ReactFlow, Background, Controls, useReactFlow, ReactFlowProvider } from
 import '@xyflow/react/dist/style.css';
 import { useStore } from '../store/useStore';
 import { CustomNode } from './CustomNode';
+import { X } from 'lucide-react';
 
 const FlowCanvasInner = () => {
   const { nodes, edges, setSelectedNode, toggleNode, selectedNodeId } = useStore();
@@ -84,13 +85,63 @@ const FlowCanvasInner = () => {
   );
 };
 
+const OverlayGraphInner = () => {
+  const { overlayNodes, overlayEdges } = useStore();
+  const nodeTypes = useMemo(() => ({ custom: CustomNode }), []);
+  const { fitView } = useReactFlow();
+
+  useEffect(() => {
+    if (overlayNodes.length > 0) {
+      // Small timeout to ensure nodes are mounted before fitting
+      setTimeout(() => {
+        fitView({ duration: 800, padding: 0.5, maxZoom: 1 });
+      }, 50);
+    }
+  }, [overlayNodes, fitView]);
+
+  return (
+    <ReactFlow
+      nodes={overlayNodes}
+      edges={overlayEdges}
+      nodeTypes={nodeTypes}
+      minZoom={0.1}
+      maxZoom={1.5}
+      className="touch-none bg-slate-50/50"
+      style={{ width: '100%', height: '100%' }}
+    >
+      <Background className="opacity-40" color="#3b82f6" gap={24} size={2} />
+    </ReactFlow>
+  );
+};
+
 export const GraphCanvas = () => {
+  const { isOverlayOpen, setOverlayOpen } = useStore();
   return (
     <div className="w-full h-full bg-transparent relative">
       <ReactFlowProvider>
-        {/* Ensure the ReactFlow component has no solid background */}
         <FlowCanvasInner/>
       </ReactFlowProvider>
+
+      {/* OVERLAY GRAPH MODAL */}
+      {isOverlayOpen && (
+        <div className="absolute inset-8 z-[100] bg-white/80 backdrop-blur-xl rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-white/50 overflow-hidden animate-in zoom-in-95 duration-300">
+          <button 
+            onClick={() => setOverlayOpen(false)}
+            className="absolute top-6 right-6 z-[110] p-3 bg-white hover:bg-slate-100 rounded-full text-slate-500 shadow-md transition-all hover:scale-110"
+          >
+            <X size={20} strokeWidth={2.5}/>
+          </button>
+          
+          <div className="absolute top-6 left-6 z-[110] flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+            <span className="text-xs font-bold text-slate-700 uppercase tracking-widest bg-white/80 px-3 py-1.5 rounded-lg shadow-sm">AI Sub-Process Explorer</span>
+          </div>
+
+          <ReactFlowProvider>
+            <OverlayGraphInner />
+          </ReactFlowProvider>
+        </div>
+      )}
     </div>
   );
 };

@@ -2,6 +2,19 @@ import { create } from 'zustand';
 import type { Node, Edge } from '@xyflow/react';
 import { getLayoutedElements } from '../utils/layout';
 
+export const getSelectedLanguage = () => {
+  if (typeof document === 'undefined') return 'en';
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; googtrans=`);
+  if (parts.length === 2) {
+    const langCode = parts.pop()?.split(";").shift();
+    if (langCode) {
+       return langCode.substring(langCode.length - 2);
+    }
+  }
+  return 'en';
+};
+
 export type NodeData = {
   id: string; type: string; title: string; chatText: string; actionLink?: string; prerequisites: string[];
 };
@@ -22,6 +35,10 @@ interface FlowState {
   isLoading: boolean;
   appState: AppState;
   nodeStatuses: Record<string, NodeStatus>;
+  overlayNodes: Node[];
+  overlayEdges: Edge[];
+  isOverlayOpen: boolean;
+  setOverlayOpen: (val: boolean) => void;
   
   fetchGraphData: (userQuery: string, attachToNodeId?: string | null) => void;
   setSelectedNode: (id: string | null) => void;
@@ -75,6 +92,8 @@ const updateCascadeLogic = (get: any, set: any) => {
 
 export const useStore = create<FlowState>((set, get) => ({
   nodes: [], edges: [], selectedNodeId: null, graphDatabase: null, chatHistory: [], isLoading: false, appState: 'idle', nodeStatuses: {},
+  overlayNodes: [], overlayEdges: [], isOverlayOpen: false,
+  setOverlayOpen: (val) => set({ isOverlayOpen: val }),
   isListening: false, isSpeaking: false,
   setIsListening: (val) => set({ isListening: val }),
   setIsSpeaking: (val) => set({ isSpeaking: val }),
@@ -157,9 +176,13 @@ export const useStore = create<FlowState>((set, get) => ({
                 id: `e-${e.source}-${e.target}`, source: e.source, target: e.target, animated: true, style: { stroke: '#3b82f6', strokeWidth: 2 } 
               } as Edge));
 
+              // Run layout engine for isolated island
+              const { nodes: layoutedIslandNodes, edges: layoutedIslandEdges } = getLayoutedElements(islandNodes, islandEdges, 'LR');
+
               set((state) => ({
-                nodes: [...state.nodes, ...islandNodes],
-                edges: [...state.edges, ...islandEdges],
+                overlayNodes: layoutedIslandNodes,
+                overlayEdges: layoutedIslandEdges,
+                isOverlayOpen: true,
                 graphDatabase: mergedDb
               }));
             } else {
@@ -218,11 +241,13 @@ export const useStore = create<FlowState>((set, get) => ({
 
             // --- Trigger Automatic Audio Summary ---
             try {
+              const reqLang = getSelectedLanguage();
+              console.log("🔊 Sending /voice/synthesize request with Language:", reqLang, "Text:", ttsText);
               
               fetch('https://factsheet-tradition-giblet.ngrok-free.dev/voice/synthesize', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: ttsText })
+                body: JSON.stringify({ text: ttsText, language: getSelectedLanguage() })
               })
               .then(res => res.json())
               .then(data => {
@@ -286,6 +311,43 @@ export const useStore = create<FlowState>((set, get) => ({
     
     if (isExpanded) {
       get().toggleNode('node_prereqs_main');
+    }
+
+    // Trigger AI to speak the next step
+    const nextStep = state.graphDatabase?.nodes['step_1'];
+    if (nextStep) {
+      const ttsText = `Great! You have all the prerequisites. Your next step is: ${nextStep.title}.`;
+      
+      const newMsgId = Date.now().toString();
+      set((currentState) => ({
+        chatHistory: [
+          ...currentState.chatHistory,
+          { id: `agent-${newMsgId}`, role: 'agent', text: ttsText }
+        ]
+      }));
+
+      try {
+        const reqLang = getSelectedLanguage();
+        console.log("🔊 Sending /voice/synthesize request (Prerequisites) with Language:", reqLang);
+        
+        fetch('https://factsheet-tradition-giblet.ngrok-free.dev/voice/synthesize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: ttsText, language: getSelectedLanguage() })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.audio_b64) {
+            const audio = new Audio(`data:${data.audio_mime_type || 'audio/mpeg'};base64,${data.audio_b64}`);
+            set({ isSpeaking: true });
+            audio.onended = () => set({ isSpeaking: false });
+            audio.play();
+          }
+        })
+        .catch(err => console.error("TTS fetch failed", err));
+      } catch (err) {
+        console.error("Failed to generate TTS text", err);
+      }
     }
   },
   

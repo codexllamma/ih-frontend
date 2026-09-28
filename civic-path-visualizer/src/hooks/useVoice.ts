@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useStore } from '../store/useStore';
+import { useStore, getSelectedLanguage } from '../store/useStore';
 
 export const useVoice = (sessionId: string = `session-${Math.random().toString(36).substring(2, 10)}`) => {
   const { setIsListening, setIsSpeaking } = useStore();
@@ -64,7 +64,7 @@ export const useVoice = (sessionId: string = `session-${Math.random().toString(3
           if (!silenceTimerRef.current) {
             silenceTimerRef.current = setTimeout(() => {
               stopRecording();
-            }, 1200); // Wait 1.2 seconds before auto-submitting
+            }, 1700); // Wait 1.2 seconds before auto-submitting
           }
         }
         
@@ -87,6 +87,7 @@ export const useVoice = (sessionId: string = `session-${Math.random().toString(3
         // These match your FastAPI File(...) and Form(...) requirements
         formData.append('audio', audioBlob, 'recording.webm');
         formData.append('session_id', sessionId);
+        formData.append('language', getSelectedLanguage());
         
         // Append graph state for the heuristic engine
         const storeState = useStore.getState();
@@ -95,6 +96,8 @@ export const useVoice = (sessionId: string = `session-${Math.random().toString(3
           nodes: storeState.graphDatabase?.nodes || {}
         });
         formData.append('graph_state', graphState);
+        
+        console.log("🎤 Sending /voice/journey request with Language:", getSelectedLanguage());
 
         try {
           // Hit the ngrok REST endpoint
