@@ -1,20 +1,46 @@
+import { useState } from 'react';
 import { GraphCanvas } from './components/GraphCanvas';
 import { ChatSidebar } from './components/ChatSidebar';
 import { Agent3D } from './components/Agent3D';
 import { useStore } from './store/useStore';
-import { X } from 'lucide-react';
+import { X, Shield, User } from 'lucide-react';
 import GoogleTranslate from './components/GoogleTranslate';
+import { AdminPanel } from './components/AdminPanel';
 import './App.css'; 
 
 function App() {
   const { nodes, appState, setAppState } = useStore();
+  const [viewMode, setViewMode] = useState<'client' | 'admin'>('client');
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
       
-      {/* 🌐 Google Translate */}
-      <div className="absolute top-4 right-4 z-50">
+      {/* 🌐 Top Bar (Google Translate & View Switcher) */}
+      <div className="absolute top-4 right-4 z-[60] flex items-center gap-4">
+        <div className="flex bg-white/80 backdrop-blur-md p-1 rounded-lg border border-slate-200/50 shadow-sm pointer-events-auto">
+          <button 
+            onClick={() => setViewMode('client')}
+            className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-2 transition-all ${viewMode === 'client' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100/50'}`}
+          >
+            <User size={16} /> Client View
+          </button>
+          <button 
+            onClick={() => setViewMode('admin')}
+            className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-2 transition-all ${viewMode === 'admin' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100/50'}`}
+          >
+            <Shield size={16} /> Admin Panel
+          </button>
+        </div>
         <GoogleTranslate />
+      </div>
+
+      {/* Admin Panel Overlay */}
+      <div className={`absolute inset-0 z-50 transition-all duration-500 bg-white ${
+        viewMode === 'admin' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+      }`}>
+        <div className="w-full h-full pt-16">
+          {viewMode === 'admin' && <AdminPanel />}
+        </div>
       </div>
 
       {/* Decorative Background */}

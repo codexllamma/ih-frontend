@@ -113,7 +113,11 @@ export const useStore = create<FlowState>((set, get) => ({
     
     const ws = new WebSocket('wss://factsheet-tradition-giblet.ngrok-free.dev/ws/generate-procedure');
 
-    ws.onopen = () => ws.send(JSON.stringify({ query: userQuery, attachToNodeId }));
+    ws.onopen = () => {
+      const db = get().graphDatabase;
+      const context = db ? Object.values(db.nodes).map(n => n.title + ": " + n.chatText).join("\n") : "";
+      ws.send(JSON.stringify({ query: userQuery, attachToNodeId, context }));
+    };
 
     ws.onmessage = (event) => {
       try {
@@ -122,7 +126,17 @@ export const useStore = create<FlowState>((set, get) => ({
           set((state) => ({
             chatHistory: state.chatHistory.map(msg => msg.id === `status-${newMsgId}` ? { ...msg, text: response.message } : msg)
           }));
-        } 
+        }
+        else if (response.type === 'answer') {
+          set((state) => ({
+            isLoading: false,
+            appState: 'active',
+            chatHistory: state.chatHistory.map(msg => 
+              msg.id === `status-${newMsgId}` ? { ...msg, role: 'agent', text: response.answer, id: `agent-${newMsgId}` } : msg
+            )
+          }));
+          ws.close();
+        }
         else if (response.type === 'complete') {
           console.log("[useStore] Received 'complete' payload:", response.payload);
           const liveData: ApiPayload = response.payload;
