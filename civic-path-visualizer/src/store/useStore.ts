@@ -187,13 +187,57 @@ export const useStore = create<FlowState>((set, get) => ({
 
             updateCascadeLogic(get, set);
             
+            // --- Generate Audio Summary Text ---
+            let ttsText = "I have generated your roadmap. ";
+            try {
+              const allNodes = Object.values(liveData.nodes || {});
+              const prereqs = allNodes.filter(n => n.id.startsWith('doc_') || n.id.startsWith('prereq_')).map(n => n.title);
+              const steps = allNodes.filter(n => n.id.startsWith('step_')).sort((a, b) => {
+                const aNum = parseInt(a.id.split('_')[1] || '0');
+                const bNum = parseInt(b.id.split('_')[1] || '0');
+                return aNum - bNum;
+              }).map(n => n.title);
+              
+              if (prereqs.length > 0) {
+                ttsText += `You will need ${prereqs.length} prerequisites, such as ${prereqs.slice(0, 3).join(', ')}. `;
+              }
+              if (steps.length > 0) {
+                ttsText += `There are ${steps.length} steps, starting with ${steps[0]}. Let me know when you are ready to begin!`;
+              }
+            } catch (err) {
+              console.error("Failed to generate TTS text", err);
+            }
+
             set((state) => ({ 
               isLoading: false,
               appState: 'success', 
               chatHistory: state.chatHistory
                 .filter(msg => msg.id !== `status-${newMsgId}`)
-                .concat({ id: `agent-${newMsgId}`, role: 'agent', text: liveData.narrative })
+                .concat({ id: `agent-${newMsgId}`, role: 'agent', text: ttsText })
             }));
+
+            // --- Trigger Automatic Audio Summary ---
+            try {
+              
+              fetch('https://factsheet-tradition-giblet.ngrok-free.dev/voice/synthesize', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: ttsText })
+              })
+              .then(res => res.json())
+              .then(data => {
+                if (data.audio_b64) {
+                  const audio = new Audio(`data:${data.audio_mime_type};base64,${data.audio_b64}`);
+                  set({ isSpeaking: true });
+                  audio.onended = () => set({ isSpeaking: false });
+                  audio.play();
+                }
+              })
+              .catch(err => console.error("TTS fetch failed", err));
+            } catch (err) {
+              console.error("Failed to generate TTS text", err);
+            }
+            // ---------------------------------------
             
             ws.close();
             setTimeout(() => { set({ appState: 'active' }); }, 3000);
