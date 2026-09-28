@@ -11,10 +11,12 @@ const LANGUAGES = [
   { label: "English", code: "en" },
   { label: "Hindi (हिंदी)", code: "hi" },
   { label: "Marathi (मराठी)", code: "mr" },
-  { label: "Spanish (Español)", code: "es" },
-  { label: "French (Français)", code: "fr" },
-  { label: "German (Deutsch)", code: "de" },
-  { label: "Tamil (தமிழ்)", code: "ta"},
+  { label: "Gujarati (ગુજરાતી)", code: "gu" },
+  { label: "Tamil (தமிழ்)", code: "ta" },
+  { label: "Telugu (తెలుగు)", code: "te" },
+  { label: "Kannada (ಕನ್ನಡ)", code: "kn" },
+  { label: "Malayalam (മലയാളം)", code: "ml" },
+  { label: "Bengali (বাংলা)", code: "bn" },
 ];
 
 const LanguagesIcon = ({ className }: { className?: string }) => (
